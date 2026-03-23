@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: mil-mlp-loss-landscaper
+Version: 0.1.0
+Summary: MIL/MLP-aware loss-landscape framework for PyTorch
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: torch>=2.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+
+# MIL-MLP-loss-Landscaper
