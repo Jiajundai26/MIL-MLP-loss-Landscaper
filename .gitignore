@@ -1,0 +1,95 @@
+# =========================
+# Python byte-compiled / optimized / DLL files
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# Distribution / packaging
+# =========================
+*.egg-info/
+dist/
+build/
+*.egg
+
+# =========================
+# Virtual environments
+# =========================
+.venv/
+venv/
+env/
+
+# =========================
+# PyTest cache
+# =========================
+.pytest_cache/
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# ML / DL model artifacts
+# =========================
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.onnx
+
+# =========================
+# Arrays / serialized intermediates
+# =========================
+*.npy
+*.npz
+*.pkl
+*.joblib
+
+# =========================
+# Experiment outputs
+# =========================
+outputs/
+results/
+runs/
+checkpoints/
+landscape_outputs/
+
+# =========================
+# Data directories
+# =========================
+data/raw/
+data/processed/
+data/interim/
+
+# =========================
+# HPC / cluster artifacts
+# =========================
+slurm-*.out
+slurm-*.err
+scratch/
+tmp/
+
+# =========================
+# Visualization outputs
+# =========================
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.svg
