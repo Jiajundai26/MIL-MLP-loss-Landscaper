@@ -46,6 +46,7 @@ from landscaper.config import LandscapeConfig
 from landscaper.core.directions import (
     Direction,
     ParamFilter,
+    dominant_hessian_directions,
     filter_normalize_direction,
     random_direction,
 )
@@ -122,17 +123,38 @@ def run_landscape(
         random.seed(cfg.fixed_seed)
 
     # Directions
-    if dir1 is None:
-        dir1 = random_direction(model, param_filter=param_filter,
-                                normalize=cfg.normalize_directions)
-        if cfg.normalize_directions:
-            dir1 = filter_normalize_direction(dir1, model)
-
-    if mode == "2d" and dir2 is None:
-        dir2 = random_direction(model, param_filter=param_filter,
-                                normalize=cfg.normalize_directions)
-        if cfg.normalize_directions:
-            dir2 = filter_normalize_direction(dir2, model)
+    if cfg.direction_mode == "hessian":
+        need_n = 2 if mode == "2d" and dir2 is None else 1
+        if dir1 is None or (mode == "2d" and dir2 is None):
+            hessian_dirs = dominant_hessian_directions(
+                model=model,
+                adapter=adapter,
+                dataloader=dataloader,
+                device=device,
+                top_n=max(need_n, cfg.hessian_top_n),
+                max_batches=cfg.max_batches,
+                power_iters=cfg.hessian_power_iters,
+                tol=cfg.hessian_tol,
+                param_filter=param_filter,
+                normalize=cfg.normalize_directions,
+            )
+            if dir1 is None:
+                dir1 = hessian_dirs[0]
+            if mode == "2d" and dir2 is None:
+                if len(hessian_dirs) < 2:
+                    raise ValueError("Need two Hessian directions for mode='2d'.")
+                dir2 = hessian_dirs[1]
+    else:
+        if dir1 is None:
+            dir1 = random_direction(model, param_filter=param_filter,
+                                    normalize=cfg.normalize_directions)
+            if cfg.normalize_directions:
+                dir1 = filter_normalize_direction(dir1, model)
+        if mode == "2d" and dir2 is None:
+            dir2 = random_direction(model, param_filter=param_filter,
+                                    normalize=cfg.normalize_directions)
+            if cfg.normalize_directions:
+                dir2 = filter_normalize_direction(dir2, model)
 
     evaluator = LandscapeEvaluator(
         model=model,
@@ -142,21 +164,29 @@ def run_landscape(
     )
 
     # Grid
-    alpha_min, alpha_max = cfg.alpha_range
-    beta_min, beta_max = cfg.beta_range
+    if cfg.grid_mode == "indexed":
+        indexed_axis = torch.linspace(-cfg.distance, cfg.distance, cfg.steps).tolist()
+        alphas = indexed_axis
+        betas = indexed_axis
+    else:
+        alpha_min, alpha_max = cfg.alpha_range
+        beta_min, beta_max = cfg.beta_range
+        alphas = torch.linspace(alpha_min, alpha_max, cfg.n_points_2d_alpha).tolist()
+        betas = torch.linspace(beta_min, beta_max, cfg.n_points_2d_beta).tolist()
 
     if mode == "1d":
-        alphas = torch.linspace(alpha_min, alpha_max, cfg.n_points_1d).tolist()
+        if cfg.grid_mode != "indexed":
+            alpha_min, alpha_max = cfg.alpha_range
+            alphas = torch.linspace(alpha_min, alpha_max, cfg.n_points_1d).tolist()
+            
         losses = sample_1d(model, dir1, alphas, evaluator)
         logger.info("1-D landscape complete: %d points", len(alphas))
         return {"mode": "1d", "alphas": alphas, "losses": losses, "dir1": dir1}
 
     # mode == "2d"
-    alphas = torch.linspace(alpha_min, alpha_max, cfg.n_points_2d_alpha).tolist()
-    betas = torch.linspace(beta_min, beta_max, cfg.n_points_2d_beta).tolist()
     Z = sample_2d(model, dir1, dir2, alphas, betas, evaluator)
     logger.info(
-        "2-D landscape complete: %dx%d grid", cfg.n_points_2d_alpha, cfg.n_points_2d_beta
+        "2-D landscape complete: %dx%d grid", len(alphas), len(betas)
     )
     return {
         "mode": "2d",
