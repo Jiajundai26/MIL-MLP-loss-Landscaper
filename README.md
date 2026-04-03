@@ -18,6 +18,7 @@ parameter filtering.
 | **Opaque batch handling** | No shape assumptions inside the core engine |
 | **Parameter filters** | Restrict landscape to head / aggregator / encoder sub-modules |
 | **1-D & 2-D probes** | `sample_1d`, `sample_2d`, `run_landscape` |
+| **Upstream-style mode** | Hessian-eigenvector directions + indexed `steps` grid |
 | **MIL model** | `AttentionMILMLP` – attention-based MIL on pre-computed embeddings |
 | **Data utilities** | `EmbeddingBagDataset`, `variable_length_collate`, `padded_bag_collate` |
 | **Checkpoint I/O** | `load_model_from_checkpoint`, `load_model_and_adapter` |
@@ -89,6 +90,26 @@ results = run_landscape(
 )
 ```
 
+### Upstream-style Hessian + integer-step grid (MIL/MLP)
+
+```python
+results = run_landscape(
+    model=mil_model,
+    adapter=MILClassificationAdapter(),
+    dataloader=loader,
+    mode="2d",
+    config=LandscapeConfig(
+        direction_mode="hessian",   # dominant Hessian eigenvectors
+        grid_mode="indexed",        # upstream-style steps grid
+        steps=21,
+        distance=1.0,
+        hessian_top_n=2,
+        hessian_power_iters=20,
+    ),
+    device="cuda",
+)
+```
+
 ---
 
 ## Package structure
@@ -133,6 +154,13 @@ tests/
 | `normalize_directions` | `True` | Filter-normalise random directions |
 | `stochastic_eval` | `False` | Keep `model.eval()` during probing |
 | `fixed_seed` | `None` | Seed for reproducible directions |
+| `direction_mode` | `"random"` | `"random"` or `"hessian"` direction generation |
+| `grid_mode` | `"axis"` | `"axis"` ranges or upstream-style `"indexed"` steps |
+| `steps` | `21` | Number of integer-step grid points when `grid_mode="indexed"` |
+| `distance` | `1.0` | Coordinate extent for indexed grid (`[-distance, distance]`) |
+| `hessian_top_n` | `2` | Number of dominant Hessian directions to estimate |
+| `hessian_power_iters` | `20` | Power iterations per Hessian eigenvector |
+| `hessian_tol` | `1e-6` | Numerical tolerance for Hessian iteration convergence |
 
 ---
 
