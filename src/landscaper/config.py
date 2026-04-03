@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional, Sequence
+from typing import Literal, Optional, Sequence
 
 
 @dataclass
@@ -32,6 +32,20 @@ class LandscapeConfig:
     fixed_seed:
         If set, the random seed is fixed before generating directions to
         make experiments reproducible.
+    direction_mode:
+        ``"random"`` (default) uses Gaussian random directions.
+        ``"hessian"`` estimates dominant Hessian eigenvector directions using
+        power iteration on Hessian-vector products.
+    grid_mode:
+        ``"axis"`` (default) uses explicit ``alpha_range`` / ``beta_range``.
+        ``"indexed"`` emulates upstream Landscaper's integer step grid using
+        ``steps`` and ``distance``.
+    steps / distance:
+        Indexed-grid controls.  Coordinates are linearly spaced in
+        ``[-distance, distance]`` with ``steps`` points.
+    hessian_top_n / hessian_power_iters / hessian_tol:
+        Controls Hessian eigenvector estimation when
+        ``direction_mode="hessian"``.
     """
 
     n_points_1d: int = 51
@@ -43,3 +57,10 @@ class LandscapeConfig:
     normalize_directions: bool = True
     stochastic_eval: bool = False
     fixed_seed: Optional[int] = None
+    direction_mode: Literal["random", "hessian"] = "random"
+    grid_mode: Literal["axis", "indexed"] = "axis"
+    steps: int = 21
+    distance: float = 1.0
+    hessian_top_n: int = 2
+    hessian_power_iters: int = 20
+    hessian_tol: float = 1e-6
