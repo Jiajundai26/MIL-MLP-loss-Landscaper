@@ -469,3 +469,42 @@ class TestRunLandscape:
             device="cpu",
         )
         assert result["losses"].shape == (2, 2)
+        
+    def test_run_landscape_indexed_grid(self, small_mlp):
+        x = torch.randn(4, 8)
+        y = torch.randint(0, 2, (4,))
+        dl = [(x, y)]
+        cfg = LandscapeConfig(grid_mode="indexed", steps=4, distance=0.5, fixed_seed=0)
+        result = run_landscape(
+            model=small_mlp,
+            adapter=MLPAdapter(),
+            dataloader=dl,
+            mode="2d",
+            config=cfg,
+            device="cpu",
+        )
+        assert result["alphas"] == pytest.approx([-0.5, -1 / 6, 1 / 6, 0.5], rel=1e-5)
+        assert result["betas"] == pytest.approx([-0.5, -1 / 6, 1 / 6, 0.5], rel=1e-5)
+        assert result["losses"].shape == (4, 4)
+
+    def test_run_landscape_hessian_mode(self, small_mlp):
+        x = torch.randn(4, 8)
+        y = torch.randint(0, 2, (4,))
+        dl = [(x, y)]
+        cfg = LandscapeConfig(
+            direction_mode="hessian",
+            hessian_top_n=2,
+            hessian_power_iters=2,
+            n_points_2d_alpha=2,
+            n_points_2d_beta=2,
+        )
+        result = run_landscape(
+            model=small_mlp,
+            adapter=MLPAdapter(),
+            dataloader=dl,
+            mode="2d",
+            config=cfg,
+            device="cpu",
+        )
+        assert result["losses"].shape == (2, 2)
+
