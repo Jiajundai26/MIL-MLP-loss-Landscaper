@@ -4,6 +4,7 @@ from landscaper.core.directions import (
     Direction,
     ParamFilter,
     apply_perturbation,
+    dominant_hessian_directions,
     filter_normalize_direction,
     random_direction,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "Direction",
     "ParamFilter",
     "apply_perturbation",
+    "dominant_hessian_directions",
     "filter_normalize_direction",
     "random_direction",
     "LandscapeEvaluator",
